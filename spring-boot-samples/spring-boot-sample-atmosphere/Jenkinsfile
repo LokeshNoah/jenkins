@@ -1,0 +1,31 @@
+node{
+    notify ('started')
+    stage('checkout') {
+        git 'https://github.com/LokeshNoah/jenkins.git'
+    }
+    
+    def project_patch="spring-boot-samples/spring-boot-sample-atmosphere"
+
+    dir(project_patch){
+        
+        stage('compile tests and package') {
+            sh 'mvn clean package'
+        }
+        stage('archival') {
+            archiveArtifacts 'target/*.jar'
+        } 
+        stage('unit-testing') {
+            junit 'target/surefire-reports/*.xml'
+        }
+    }
+    
+}
+
+def notify(status){
+    emailext (
+      to: "lokeshmandali@gmail.com",
+      subject: "${status}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+      body: """<p>${status}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+        <p>Check console output at <a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a></p>""",
+    )
+}
